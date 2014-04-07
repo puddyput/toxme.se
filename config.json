@@ -1,0 +1,14 @@
+{
+    "database_url": "sqlite:///hanabira.db?check_same_thread=False",
+    "debug": 0,
+    "server_port": 8000,
+    "server_addr": "::1",
+    "pid_file": "pidfile.dl",
+    "dns_record_ttl": 60,
+    "ssl_options": {
+        "certfile": "zodiac.crt",
+        "keyfile": "zodiac.key"
+    },
+    "is_proxied": 1,
+    "djbdns_root": "djbroot_test"
+}
