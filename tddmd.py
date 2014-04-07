@@ -55,11 +55,37 @@ class crypto():
                 keys_file.write(bytes(kp))
             return kp
 
-    def sign(self,text):
+    def sign(self,publickey, check=None):
+        #Check if tox1 or tox2
+        if check:
+           text = self.publickey + self.check
+        else:
+           text = self.publickey
+
         signkey = nacl.signing.SigningKey(cfg["secretkey"], encoder=nacl.encoding.HexEncoder) 
-        return(signkey.sign(self.text, encoder=nacl.encoding.Base64Encoder))
+        record = ";sign:" + signkey.sign(text, encoder=nacl.encoding.Base64Encoder)
+
+       return record
+
+    def sign_getpub(self):
+
+        signkey = nacl.signing.SigningKey(cfg["secretkey"], encoder=nacl.encoding.HexEncoder)
+        return signkey.verify_key(encoder=nacl.encoding.HexEncoder)
 
 #pragma mark - web
+
+class recorddata:
+
+    def gentox1(self, toxid):
+        entry = "v=tox1;id=" + self.toxid + crypto.sign(self.toxid)
+        return entry
+
+    def gentox2(self, publickey, check):
+        entry = "v=tox2;pub=" + self.publickey + ";check=" + self.check + crypto.sign(self.publickey, self.check)
+        return entry
+
+    def gensigning(self):
+        entry = crypto.sign_getpub()
 
 class OpaqueAPIEndpoint(tornado.web.RequestHandler):
     def get(self):
