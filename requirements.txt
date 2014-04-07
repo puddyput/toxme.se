@@ -1,0 +1,6 @@
+PyNaCl==0.2.3
+SQLAlchemy==0.9.4
+cffi==0.8.2
+pycparser==2.10
+six==1.6.1
+tornado==3.2

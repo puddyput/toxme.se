@@ -1,6 +1,7 @@
 body {
     background-color:#b95454;
     -webkit-font-smoothing:antialiased;
+    font-family:sans-serif;
 }
 .header_nav {
     margin-top:50px;

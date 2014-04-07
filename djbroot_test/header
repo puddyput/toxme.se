@@ -1,0 +1,8 @@
+# You will want to edit this to serve your needs.
+
+# HTML redirection
++*.id.kirara.ca:23.226.230.48:86400
+# NS record
+.id.kirara.ca:23.226.230.48:a:259200
+.yuu.kirara.ca:23.226.230.48:a:259200
+# -----------------------------------

@@ -1,0 +1,3 @@
+# Dummy makefile
+all:
+	true
