@@ -65,7 +65,7 @@ class crypto():
         signkey = nacl.signing.SigningKey(cfg["secretkey"], encoder=nacl.encoding.HexEncoder) 
         record = ";sign:" + signkey.sign(text, encoder=nacl.encoding.Base64Encoder)
 
-       return record
+        return record
 
     def sign_getpub(self):
 
