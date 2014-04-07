@@ -16,12 +16,16 @@ import tornado.log
 import tornado.template
 import os
 import json
-import nacl.public
+import nacl.public as public
 import nacl.encoding
-import nacl.signing
+import nacl.signing as signing
 import nacl.utils
 import logging
 import database
+
+SIGNATURE_ENC = nacl.encoding.Base64Encoder
+KEY_ENC = nacl.encoding.HexEncoder
+STORE_ENC = nacl.encoding.HexEncoder
 
 #pragma mark - constants
 
@@ -39,8 +43,8 @@ tornado.log.enable_pretty_logging()
 
 #pragma mark - crypto
 
-class crypto():
-    def init(self):
+class CryptoCore(object):
+    def __init__(self):
         """Load or initialize crypto keys."""
         try:
             with open("key", "rb") as keys_file:
@@ -48,43 +52,24 @@ class crypto():
         except IOError:
             keys = None
         if keys:
-            return nacl.public.PrivateKey(keys, nacl.encoding.RawEncoder)
+            self.pkey = public.PrivateKey(keys, STORE_ENC)
+            self.skey = signing.SigningKey(keys, STORE_ENC)
         else:
-            kp = nacl.public.PrivateKey.generate()
+            kp = public.PrivateKey.generate()
             with open("key", "wb") as keys_file:
-                keys_file.write(bytes(kp))
-            return kp
+                keys_file.write(kp.encode(STORE_ENC))
+            self.pkey = kp
+            self.skey = signing.SigningKey(bytes(self.pkey),
+                                           nacl.encoding.RawEncoder)
 
-    def sign(self,publickey, check=None):
-        #Check if tox1 or tox2
-        if check:
-           text = self.publickey + self.check
-        else:
-           text = self.publickey
+    def sign(self, text):
+        return self.skey.sign(text, encoder=SIGNATURE_ENC).decode("utf8")
 
-        signkey = nacl.signing.SigningKey(cfg["secretkey"], encoder=nacl.encoding.HexEncoder) 
-        return signkey.sign(text, encoder=nacl.encoding.Base64Encoder)
-
-    def sign_getpub(self):
-
-        signkey = nacl.signing.SigningKey(cfg["secretkey"], encoder=nacl.encoding.HexEncoder)
-        return signkey.verify_key(encoder=nacl.encoding.HexEncoder)
+    @property
+    def public_key(self):
+        return self.pkey.public_key.encode(KEY_ENC).decode("utf8").upper()
 
 #pragma mark - web
-
-class recorddata:
-
-    def gentox1(self, toxid):
-        entry = "v=tox1;id=" + self.toxid + ";sign:" + crypto.sign(self.toxid)
-        return entry
-
-    def gentox2(self, publickey, check):
-        entry = "v=tox2;pub=" + self.publickey + ";check=" + self.check + ";sign:" + crypto.sign(self.publickey, self.check)
-        return entry
-
-    def sign_pub(self):
-        entry = "v=tox;pub=" + crypto.sign_getpub()
-        return entry
 
 class OpaqueAPIEndpoint(tornado.web.RequestHandler):
     def get(self):
@@ -102,19 +87,18 @@ class PublicKey(tornado.web.RequestHandler):
         else:
             self.write({
                 "c": 0,
-                "key": self.settings["yuu_key"].encode(nacl.encoding.HexEncoder)
-                                               .decode("ascii")
+                "key": self.settings["cryptocore"].public_key
             })
 
 def main():
     with open("config.json", "r") as config_file:
         cfg = json.load(config_file)
     
-    key = crypto().init
+    crypto = CryptoCore()
     dbh = database.Database(cfg["database_url"])
     LOGGER.info("Notice: PK: {0}".format(
-        key.encode(nacl.encoding.HexEncoder).decode("ascii"))
-    )
+        crypto.public_key
+    ))
     
     ioloop = tornado.ioloop.IOLoop.instance()
     app = tornado.web.Application(
@@ -122,7 +106,8 @@ def main():
          ("/pk", PublicKey),
          ],
         template_path=os.path.join(os.path.dirname(__file__), "templates"),
-        yuu_key=key
+        cryptocore=crypto,
+        database=dbh
     )
     if "ssl_options" in cfg:
         server = tornado.httpserver.HTTPServer(app,

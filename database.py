@@ -13,6 +13,9 @@ from sqlalchemy.ext.declarative import declarative_base
 import re
 
 ID_HEX = re.compile(r"([A-F0-9][A-F0-9])")
+RECORD_DEFAULT = 0
+RECORD_TOXV1   = 1
+RECORD_TOXV2   = 2
 
 Base = declarative_base()
 
@@ -40,6 +43,27 @@ class User(Base):
         for i, v in re.findall(ID_HEX, self.tox_id):
             cks[i % 2] ^= hex(v, 16)
         return "".join(hex(byte)[2:] for byte in cks).upper()
+
+    def _encode_one(self):
+        return "v=tox1;id={0}{1}".format(self.tox_id, self.checksum())
+
+    def _encode_two(self):
+        return "v=tox2;key={0};check={1}".format(self.public_key(),
+                                                 self.checksum())
+
+    def _encode_preferred(self):
+        if self.is_public():
+            return self._encode_one()
+        else:
+            return self._encode_two()
+
+    def record(self, vers=RECORD_DEFAULT):
+        if vers == RECORD_DEFAULT:
+            return self._encode_preferred()
+        elif vers == RECORD_TOXV1:
+            return self._encode_one()
+        elif vers == RECORD_TOXV2:
+            return self._encode_two()
 
 class Database(object):
     """The object coordinator is just a fancy way of saying database"""
