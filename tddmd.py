@@ -18,6 +18,7 @@ import os
 import json
 import nacl.public
 import nacl.encoding
+import nacl.signing
 import nacl.utils
 import logging
 import database
@@ -38,24 +39,25 @@ tornado.log.enable_pretty_logging()
 
 #pragma mark - crypto
 
-def crypto_init():
-    """Load or initialize crypto keys."""
-    try:
-        with open("key", "rb") as keys_file:
-            keys = keys_file.read()
-    except IOError:
-        keys = None
-    if keys:
-        return nacl.public.PrivateKey(keys, nacl.encoding.RawEncoder)
-    else:
-        kp = nacl.public.PrivateKey.generate()
-        with open("key", "wb") as keys_file:
-            keys_file.write(bytes(kp))
-        return kp
+class crypto():
+    def init():
+        """Load or initialize crypto keys."""
+        try:
+            with open("key", "rb") as keys_file:
+                keys = keys_file.read()
+        except IOError:
+            keys = None
+        if keys:
+            return nacl.public.PrivateKey(keys, nacl.encoding.RawEncoder)
+        else:
+            kp = nacl.public.PrivateKey.generate()
+            with open("key", "wb") as keys_file:
+                keys_file.write(bytes(kp))
+            return kp
 
 #pragma mark - web
 
-class yuu_OpaqueAPIEndpoint(tornado.web.RequestHandler):
+class OpaqueAPIEndpoint(tornado.web.RequestHandler):
     def get(self):
         self.write(ERROR_METHOD_UNSUPPORTED)
 
@@ -64,7 +66,7 @@ class yuu_OpaqueAPIEndpoint(tornado.web.RequestHandler):
             self.write(ERROR_NOTSECURE)
         
 
-class yuu_PublicKey(tornado.web.RequestHandler):
+class PublicKey(tornado.web.RequestHandler):
     def get(self):
         if self.request.protocol != "https":
             self.write(ERROR_NOTSECURE)
@@ -75,11 +77,11 @@ class yuu_PublicKey(tornado.web.RequestHandler):
                                                .decode("ascii")
             })
 
-def yuu_main():
+def main():
     with open("config.json", "r") as config_file:
         cfg = json.load(config_file)
     
-    key = crypto_init()
+    key = crypto.init()
     dbh = database.Database(cfg["database_url"])
     LOGGER.info("Notice: PK: {0}".format(
         key.encode(nacl.encoding.HexEncoder).decode("ascii"))
@@ -87,8 +89,8 @@ def yuu_main():
     
     ioloop = tornado.ioloop.IOLoop.instance()
     app = tornado.web.Application(
-        [("/api", yuu_OpaqueAPIEndpoint),
-         ("/pk", yuu_PublicKey),
+        [("/api", OpaqueAPIEndpoint),
+         ("/pk", PublicKey),
          ],
         template_path=os.path.join(os.path.dirname(__file__), "templates"),
         yuu_key=key
@@ -114,4 +116,4 @@ def yuu_main():
         os.remove(cfg["pid_file"])
 
 if __name__ == "__main__":
-    yuu_main()
+    main()
