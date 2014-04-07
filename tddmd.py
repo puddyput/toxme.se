@@ -40,7 +40,7 @@ tornado.log.enable_pretty_logging()
 #pragma mark - crypto
 
 class crypto():
-    def init():
+    def init(self):
         """Load or initialize crypto keys."""
         try:
             with open("key", "rb") as keys_file:
@@ -81,7 +81,7 @@ def main():
     with open("config.json", "r") as config_file:
         cfg = json.load(config_file)
     
-    key = crypto.init()
+    key = crypto().init
     dbh = database.Database(cfg["database_url"])
     LOGGER.info("Notice: PK: {0}".format(
         key.encode(nacl.encoding.HexEncoder).decode("ascii"))
