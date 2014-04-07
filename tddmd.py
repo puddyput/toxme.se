@@ -55,6 +55,10 @@ class crypto():
                 keys_file.write(bytes(kp))
             return kp
 
+    def sign(self,text):
+        signkey = nacl.signing.SigningKey(cfg["secretkey"], encoder=nacl.encoding.HexEncoder) 
+        return(signkey.sign(self.text, encoder=nacl.encoding.Base64Encoder))
+
 #pragma mark - web
 
 class OpaqueAPIEndpoint(tornado.web.RequestHandler):
