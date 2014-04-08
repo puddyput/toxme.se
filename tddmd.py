@@ -3,7 +3,7 @@
 * Tox DNS Discovery Management Daemon - draft API server for Tox ID publishing.
 * Since "Tox DNS Discovery Management Daemon" is a mouthful, just call it "yuu"
 *
-* Author: stal, April 2014
+* Author: stal, stqism; April 2014
 * Copyright (c) 2014 Zodiac Labs.
 * You are free to do whatever you want with this file -- provided that this
 * notice is retained.
@@ -19,9 +19,11 @@ import json
 import nacl.public as public
 import nacl.encoding
 import nacl.signing as signing
+import nacl.exceptions
 import nacl.utils
 import logging
 import database
+import re
 
 SIGNATURE_ENC = nacl.encoding.Base64Encoder
 KEY_ENC = nacl.encoding.HexEncoder
@@ -35,6 +37,11 @@ ERROR_METHOD_UNSUPPORTED = {"c": -1}
 ERROR_NOTSECURE = {"c": -2}
 # Bad encrypted payload (not encrypted with our key)
 ERROR_BAD_PAYLOAD = {"c": -3}
+
+ACTION_PUBLISH   = 1
+ACTION_UNPUBLISH = 2
+
+VALID_KEY = re.compile(r"[A-Fa-f0-9]{64}")
 
 #pragma mark - logging
 
@@ -77,8 +84,66 @@ class OpaqueAPIEndpoint(tornado.web.RequestHandler):
 
     def post(self):
         if self.request.protocol != "https":
+            self.set_status(400)
             self.write(ERROR_NOTSECURE)
+            return
+
+        try:
+            envelope = self.request.body.decode("utf8")
+            envelope = json.loads(envelope)
+        except (UnicodeDecodeError, TypeError):
+            LOGGER.warn("did fail req because json decode failed")
+            self.set_status(400)
+            self.write(ERROR_BAD_PAYLOAD)
+            return
+
+        LOGGER.info("Notice: {0}".format(envelope))
         
+        action = envelope.get("a")
+        if action is None:
+            LOGGER.warn("did fail req because there is no a param")
+            self.set_status(400)
+            self.write(ERROR_BAD_PAYLOAD)
+            return
+        elif action == ACTION_PUBLISH:
+            for key in ("k", "r", "e"):
+                if key not in envelope:
+                    LOGGER.warn("did fail req because json contents are bad")
+                    self.set_status(400)
+                    self.write(ERROR_BAD_PAYLOAD)
+                    return
+            
+            if not VALID_KEY.match(envelope.get("k", "")):
+                LOGGER.warn("did fail req because pk was bad")
+                self.set_status(400)
+                self.write(ERROR_BAD_PAYLOAD)
+                return
+            
+            other_key = public.PublicKey(envelope["k"], KEY_ENC)
+            box = public.Box(self.settings["cryptocore"].pkey,
+                             other_key)
+            
+            try:
+                nonce = nacl.encoding.Base64Encoder.decode(envelope["r"])
+                ciphertext = nacl.encoding.Base64Encoder.decode(envelope["e"])
+                if len(nonce) != public.Box.NONCE_SIZE:
+                    raise ValueError("bad nonce")
+            except (ValueError, TypeError):
+                LOGGER.warn("did fail req because a base64 value was bad")
+                self.set_status(400)
+                self.write(ERROR_BAD_PAYLOAD)
+                return
+            
+            try:
+                clear = box.decrypt(ciphertext, nonce, nacl.encoding.RawEncoder)
+            except nacl.exceptions.CryptoError:
+                LOGGER.warn("did fail req because decrypting e failed")
+                self.set_status(400)
+                self.write(ERROR_BAD_PAYLOAD)
+                return
+
+            LOGGER.info("Notice: {0}".format(clear))
+            
 
 class PublicKey(tornado.web.RequestHandler):
     def get(self):
