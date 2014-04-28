@@ -94,7 +94,7 @@ function sc_performSearch() {
 function sc_init() {
     "use strict";
     var qbox = document.getElementById("search_text");
-    qbox.value = window.location.hash;
+    qbox.value = window.location.hash.substring(1);
     document.getElementById("search_go").addEventListener(
         "click", sc_performSearch, 1
     );
