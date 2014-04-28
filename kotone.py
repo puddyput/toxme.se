@@ -64,11 +64,11 @@ def read_tox(fil):
 def push(addr, name, fil):
     pkr = requests.get(addr + "/pk", verify=False)
     sk = pkr.json()["key"]
-    
+
     mypub, mysec, nospam = read_tox(fil)
     check = _compute_checksum(mypub + nospam)
     print("kotone: Publishing {0}/{1} to server.".format(mypub, check))
-    pin = base64.b64encode(nospam.decode("hex"))[:6]
+    pin = base64.b64encode(bytes(nospam).decode("hex"))[:6]
     print("kotone: By the way, your PIN is {0}.".format(pin))
     inner = json.dumps({
         "s": mypub + check,
