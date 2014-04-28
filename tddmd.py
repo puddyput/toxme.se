@@ -43,7 +43,7 @@ INTERPRET_TOX2 = lambda r: {
 
 INTERPRET_TOX1 = lambda r: {
     "public_key": r["id"],
-    "check": r[-4:],
+    "check": r["id"][-4:],
     "version": "Tox V1",
 }
 
