@@ -10,5 +10,8 @@
         "keyfile": "zodiac.key"
     },
     "is_proxied": 1,
-    "djbdns_root": "djbroot_test"
+    "djbdns_root": "djbroot",
+    "registration_domain": "sandbox.yuu.kirara.ca",
+    "number_of_workers": 2,
+    "bar_names": false
 }

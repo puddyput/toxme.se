@@ -1,6 +1,9 @@
 PyNaCl==0.2.3
 SQLAlchemy==0.9.4
 cffi==0.8.2
+dnspython3==1.11.1
 pycparser==2.10
+qrcode==4.0.4
+requests==2.2.1
 six==1.6.1
 tornado==3.2

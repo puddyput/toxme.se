@@ -17,6 +17,7 @@ import json
 import nacl.public as crypto
 import nacl.encoding as crypto_encode
 import os
+import time
 
 ENDPOINT = "https://[::1]:8000"
 
@@ -35,7 +36,7 @@ def harutest_badpayload():
     assert r.json()["c"] == -3, "unexpected response"
 
 def _hexkey(k):
-    return k.public_key.encode(crypto_encode.HexEncoder).decode("utf8")
+    return k.public_key.encode(crypto_encode.HexEncoder).decode("utf8").upper()
 
 def harutest_publish():
     pkr = requests.get(ENDPOINT + "/pk", verify=False)
@@ -43,9 +44,10 @@ def harutest_publish():
     
     k = crypto.PrivateKey.generate()
     inner = json.dumps({
-        "s": "00000000",
+        "s": _hexkey(k)[:64] + "12345678",
         "n": "test",
-        "l": 0
+        "l": 1,
+        "t": int(time.time())
     })
     nonce = os.urandom(crypto.Box.NONCE_SIZE)
     b = crypto.Box(k, crypto.PublicKey(sk, crypto_encode.HexEncoder))
