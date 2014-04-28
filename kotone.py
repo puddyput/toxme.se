@@ -19,6 +19,7 @@ import nacl.encoding as crypto_encode
 import nacl.public as crypto
 import os
 import random
+import base64
 
 def _compute_checksum(data, iv=(0, 0)):
     checksum = list(iv)
@@ -67,6 +68,8 @@ def push(addr, name, fil):
     mypub, mysec, nospam = read_tox(fil)
     check = _compute_checksum(mypub + nospam)
     print("kotone: Publishing {0}/{1} to server.".format(mypub, check))
+    pin = base64.b64encode(nospam.decode("hex"))[:6]
+    print("kotone: By the way, your PIN is {0}.".format(pin))
     inner = json.dumps({
         "s": mypub + check,
         "n": name,
