@@ -1,95 +1,101 @@
-function SC_performSearch() {
-    var query = document.getElementById("search_text").value.trim();
-    if (query === "")
-        return;
-    window.searchIsRunning = 1
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        SC_lookupStatusDidChange(xhr);
-    }
-    xhr.open("POST", "/api", true);
-    xhr.send(JSON.stringify({
-        "a": 3,
-        "name": query,
-    }));
-    SC_showFailureOnUI("Please wait...")
-    console.log(query);
-}
-
-function SC_showFailureOnUI(s) {
+function sc_showFailureOnUI(s) {
+    "use strict";
     document.getElementById("lookup_results").style.display = "none";
     var message = document.getElementById("lookup_error");
     message.style.display = "block";
     message.textContent = s;
 }
 
-function SC_errorStringFromCode(ec) {
+function sc_errorStringFromCode(ec) {
+    "use strict";
     switch (ec) {
-        case -41:
-            return "Lookup failed: unspecified error.";
-        case -42:
-            return "Lookup failed: user not found.";
-        case -43:
-            return "Lookup failed: internal error! Please report it on GitHub."
-        case -3:
-            return "Lookup failed: the address wasn't valid."
+    case -41:
+        return "Lookup failed: unspecified error.";
+    case -42:
+        return "Lookup failed: user not found.";
+    case -43:
+        return "Lookup failed: internal error! Please report it on GitHub.";
+    case -3:
+        return "Lookup failed: the address wasn't valid.";
     }
 }
 
-function SC_showResultOnUI(payload) {
+function sc_showResultOnUI(payload) {
+    "use strict";
+    var message, source, sigbox;
     document.getElementById("lookup_error").style.display = "none";
-    var message = document.getElementById("lookup_results");
+    message = document.getElementById("lookup_results");
     message.style.display = "block";
     document.getElementById("lu_oname").textContent = payload.name;
     document.getElementById("lu_regdomain").textContent = payload.regdomain;
-    var source;
-    if (payload.source == 1) {
+    if (payload.source === 1) {
         source = "local user";
     } else {
         source = "remote user";
     }
     document.getElementById("lu_stype").textContent = source;
     document.getElementById("lu_rectype").textContent = payload.version;
-    if (payload.public_key.length == 64) {
-        document.getElementById("results").className = "v2"
+    if (payload.public_key.length === 64) {
+        document.getElementById("results").className = "v2";
         document.getElementById("lu_user_pk").textContent = payload.public_key;
     } else {
-        document.getElementById("results").className = "v1"
+        document.getElementById("results").className = "v1";
         document.getElementById("lu_user_id").textContent = payload.public_key;
     }
-    var sigbox = document.getElementById("lu_user_sig");
+    sigbox = document.getElementById("lu_user_sig");
     sigbox.textContent = payload.verify.detail;
-    sigbox.className = payload.verify.status == 1 ? "good"
-                       : (payload.verify.status == 2 ? "bad" : "undecided")
+    sigbox.className = payload.verify.status === 1 ? "good"
+                       : (payload.verify.status === 2 ? "bad" : "undecided");
 }
 
-function SC_lookupStatusDidChange(sender) {
-    if (sender.readyState == 4) {
-        var respload;
+function sc_lookupStatusDidChange(sender) {
+    "use strict";
+    var respload, ec
+    if (sender.readyState === 4) {
         try {
             respload = JSON.parse(sender.responseText);
         } catch (e) {
             respload = null;
         }
-        
-        if (sender.status != 200) {
-            var ec = 0;
-            if (respload && (ec = parseInt(respload.c))) {
-                SC_showFailureOnUI(SC_errorStringFromCode(ec));
+
+        if (sender.status !== 200) {
+            if (respload && (ec = parseInt(respload.c, 10))) {
+                sc_showFailureOnUI(sc_errorStringFromCode(ec));
             } else {
-                SC_showFailureOnUI("Lookup failed: server responded \
+                sc_showFailureOnUI("Lookup failed: server responded \
                                     with status code " + sender.status);
             }
             return;
         }
-            
-        console.log(respload);
-        SC_showResultOnUI(respload);
+
+        sc_showResultOnUI(respload);
     }
 }
 
-function SC_init() {
+function sc_performSearch() {
+    "use strict";
+    var query, xhr;
+    query = document.getElementById("search_text").value.trim();
+    if (query === "")
+        return;
+    window.searchIsRunning = 1
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        sc_lookupStatusDidChange(xhr);
+    }
+    xhr.open("POST", "/api", true);
+    xhr.send(JSON.stringify({
+        "a": 3,
+        "name": query,
+    }));
+    sc_showFailureOnUI("Please wait...")
+}
+
+function sc_init() {
+    "use strict";
+    var qbox = document.getElementById("search_text");
+    qbox.value = window.location.hash;
     document.getElementById("search_go").addEventListener(
-        "click", SC_performSearch, 1
+        "click", sc_performSearch, 1
     );
 }

@@ -68,8 +68,8 @@ def push(addr, name, fil):
     mypub, mysec, nospam = read_tox(fil)
     check = _compute_checksum(mypub + nospam)
     print("kotone: Publishing {0}/{1} to server.".format(mypub, check))
-    pin = base64.b64encode(bytes(nospam).decode("hex"))[:6]
-    print("kotone: By the way, your PIN is {0}.".format(pin))
+    pin = base64.b64encode(binascii.unhexlify(nospam))[:6]
+    print("kotone: By the way, your PIN is {0}.".format(pin.decode("utf-8")))
     inner = json.dumps({
         "s": mypub + check,
         "n": name,
