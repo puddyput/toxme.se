@@ -3,3 +3,12 @@ bin/
 include/
 lib/
 .Python
+share/
+config.json
+*.db
+te3.py
+zodiac.crt
+zodiac.key
+__pycache__
+key
+djbroot
