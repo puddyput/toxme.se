@@ -154,7 +154,7 @@ class APIUpdateName(APIHandler):
         # Clears in one hour
         ctr["clear_date"][self.request.remote_ip] = time.time() + 3600
         
-        if ctr["counter"][self.request.remote_ip] > (THROTTLE_THRESHOLD + 1):
+        if ctr["counter"][self.request.remote_ip] > THROTTLE_THRESHOLD:
             self.set_status(400)
             self.write(error_codes.ERROR_RATE_LIMIT)
             return
