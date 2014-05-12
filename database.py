@@ -2,7 +2,7 @@
 * Tox DNS Discovery Management Daemon - draft API server for Tox ID publishing.
 * Since "Tox DNS Discovery Management Daemon" is a mouthful, just call it "yuu"
 *
-* Author: stal, stqism; April 2014
+* Author: stal; April 2014
 * Copyright (c) 2014 Zodiac Labs.
 * You are free to do whatever you want with this file -- provided that this
 * notice is retained.
@@ -14,11 +14,16 @@ from sqlalchemy.ext.declarative import declarative_base
 from string import printable
 import re
 import threading
-from const import *
 
-Base = declarative_base()
+"""
+Module summary: manages the database of users.
+"""
 
-class User(Base):
+BASE = declarative_base()
+DJB_SPECIAL = re.compile(r"([;=])")
+PRESENCE_CACHE_CEILING = 1000
+
+class User(BASE):
     __tablename__ = "records"
     user_id = Column(Integer, primary_key=True)
     name = Column(Unicode, unique=True)
@@ -28,25 +33,17 @@ class User(Base):
     privacy = Column(Integer)
     timestamp = Column(DateTime)
     sig = Column(String)
-    
+
     def is_searchable(self):
         """Whether searching will find this user."""
         return self.privacy > 0
-    
-    def is_public(self):
-        """Whether to publish as toxv1 rec.
-           (Deprecated. this flag is ignored)"""
-        return self.privacy > 1
-    
-    def _encode_two(self):
+
+    def record(self):
         rec = "v=tox2;pub={0};check={1};sign={2}".format(self.public_key,
                                                          self.checksum,
                                                          self.sig)
         return DJB_SPECIAL.sub(lambda c: "\\" + "{0:o}".format(ord(c.group(0)))
                                                        .zfill(3), rec)
-    
-    def record(self, vers=RECORD_DEFAULT):
-        return self._encode_two()
 
     def fqdn(self, suffix):
         o = []
@@ -66,16 +63,13 @@ class StaleUser(object):
         self.privacy = u.privacy
         self.timestamp = u.timestamp
         self.sig = u.sig
-    
+
     def is_searchable(self):
         return User.is_searchable(self)
-    
-    def is_public(self):
-        return User.is_public(self)
-    
-    def record(self, vers=RECORD_DEFAULT):
-        return User.record(self, vers)
-    
+
+    def record(self):
+        return User.record(self)
+
     def fqdn(self, suffix):
         return User.fqdn(self, suffix)
 
@@ -83,7 +77,7 @@ class Database(object):
     def __init__(self, backing="sqlite:///:memory:", should_echo=1):
         self.presence_cache = {}
         self.dbc = sqlalchemy.create_engine(backing, echo=should_echo)
-        Base.metadata.create_all(self.dbc)
+        BASE.metadata.create_all(self.dbc)
         self.gs = sqlalchemy.orm.sessionmaker(bind=self.dbc)
         self.lock = threading.RLock()
 
