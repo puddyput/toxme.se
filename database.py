@@ -42,11 +42,17 @@ class User(BASE):
         return self.privacy > 0
 
     def record(self):
-        """Return a tox2 record for this user, escaping weird bytes in
-           octal format."""
-        rec = "v=tox2;pub={0};check={1};sign={2}".format(self.public_key,
-                                                         self.checksum,
-                                                         self.sig)
+        """Return a record for this user, escaping weird bytes in
+           octal format.
+           If our PIN is available, we return a tox1 record."""
+        if self.pin:
+            rec = "v=tox1;id={0}{1}{2};sign={3}".format(self.public_key,
+                                                        self.pin, self.checksum,
+                                                        self.sig)
+        else:
+            rec = "v=tox2;pub={0};check={1};sign={2}".format(self.public_key,
+                                                             self.checksum,
+                                                             self.sig)
         return DJB_SPECIAL.sub(lambda c: "\\" + "{0:o}".format(ord(c.group(0)))
                                                        .zfill(3), rec)
 

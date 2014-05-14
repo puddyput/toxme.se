@@ -79,11 +79,20 @@ class CryptoCore(object):
     def sign(self, uobj):
         e = nacl.encoding.HexEncoder
         pubkey = e.decode(uobj.public_key)
+        pin = e.decode(uobj.pin) if uobj.pin else b""
         checksum = e.decode(uobj.checksum)
         name = uobj.name.encode("utf8")
 
-        text = b"".join((name, pubkey, checksum))
+        text = b"".join((name, pubkey, pin, checksum))
         return self.skey.sign(text, encoder=SIGNATURE_ENC).decode("utf8")
+
+    @staticmethod
+    def compute_checksum(data, iv=(0, 0)):
+        e = nacl.encoding.HexEncoder
+        checksum = list(iv)
+        for ind, byte in enumerate(e.decode(data)):
+            checksum[ind % 2] ^= byte
+        return "".join(hex(byte)[2:].zfill(2) for byte in checksum).upper()
 
     @property
     def public_key(self):
@@ -179,7 +188,8 @@ class APIHandler(tornado.web.RequestHandler):
                 self.set_status(400)
                 self.write(error_codes.ERROR_DUPE_ID)
                 return 0
-            hooks.did_update_record(database.StaleUser(mus))
+            hooks.did_update_record(self.settings["hooks_state"],
+                                    database.StaleUser(mus))
             session.close()
         return 1
 
@@ -229,7 +239,8 @@ class APIUpdateName(APIHandler):
 
         pub, check = id_[:64], id_[64:]
 
-        if self.update_db_entry(auth, name, pub, bio, check, max(clear["l"], 0)):
+        if self.update_db_entry(auth, name, pub, bio, check,
+                                max(clear["l"], 0)):
             self.write(error_codes.ERROR_OK)
         return
 
@@ -253,7 +264,7 @@ class APIReleaseName(APIHandler):
         old = database.StaleUser(rec)
         self.settings["local_store"].delete_pk(pk)
         self.write(error_codes.ERROR_OK)
-        hooks.did_delete_record(old)
+        hooks.did_delete_record(self.settings["hooks_state"], old)
         return
 
 class APILookupID(tornado.web.RequestHandler):
@@ -427,6 +438,8 @@ class AddKeyWeb(APIHandler):
             return
         self.render("add_ui.html")
 
+    # FIXME: Returns JSON errors, but they should have a pretty page
+    # explaining what went wrong.
     def post(self):
         if self.request.protocol != "https":
             self.write(error_codes.ERROR_NOTSECURE)
@@ -447,21 +460,21 @@ class AddKeyWeb(APIHandler):
         name = self.get_body_argument("name").lower()
         if (not DISALLOWED_CHARS.isdisjoint(set(name))
             or name in DISALLOWED_NAMES):
-            print("1")
             self.set_status(400)
+            self.write(error_codes.ERROR_BAD_PAYLOAD)
             return
 
         bio = self.get_body_argument("bio")
         if len(bio) > BIO_LIMIT:
-            print("2")
             self.set_status(400)
+            self.write(error_codes.ERROR_BAD_PAYLOAD)
             return
 
         toxid = self.get_body_argument("tox_id").upper()
         if (not VALID_ANY.match(toxid)
             or len(toxid) not in {68, 76}):
-            print("3")
             self.set_status(400)
+            self.write(error_codes.ERROR_BAD_PAYLOAD)
             return
         
         if len(toxid) == 68:
@@ -470,12 +483,17 @@ class AddKeyWeb(APIHandler):
             check = toxid[64:]
         else:
             pkey = toxid[:64]
-            pin = (toxid[64:72] if self.get_body_argument("is_public", 0)
-                                else None)
+            pin = toxid[64:72]
             check = toxid[72:]
+            if CryptoCore.compute_checksum("".join((pkey, pin))) != check:
+                self.set_status(400)
+                self.write(error_codes.ERROR_BAD_PAYLOAD)
+                return
 
         if self.update_db_entry(None, name, pkey, bio, check, 1, pin):
             self.redirect("/friends/0")
+        else:
+            self.write(error_codes.ERROR_NAME_TAKEN)
         return
 
 def main():
@@ -487,7 +505,7 @@ def main():
     local_store = database.Database(cfg["database_url"])
     lookup_core = dns_discovery.DNSCore(cfg["number_of_workers"])
     lookup_core.callback_dispatcher = lambda cb, r: ioloop.add_callback(cb, r)
-    hooks.init(cfg, local_store)
+    hooks_state = hooks.init(cfg, local_store)
 
     # an interesting object structure
     address_ctr = {ACTION_PUBLISH: {"counter": Counter(),
@@ -514,6 +532,7 @@ def main():
         local_store=local_store,
         lookup_core=lookup_core,
         address_ctr=address_ctr,
+        hooks_state=hooks_state,
         home=cfg["registration_domain"],
     )
     server = tornado.httpserver.HTTPServer(app, **{
