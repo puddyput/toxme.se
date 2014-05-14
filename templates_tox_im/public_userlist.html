@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tox ID Service</title>
+    <link href="../static/tox.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <header class="header_nav">
+        <a class="icon" href="/" title="Tox"></a>
+    </header>
+    <article class="main_content findfriends">
+        <div class="chunk hello dark">
+            <p class="tagline">Find Friends</p>
+            <p>
+                Click on a name below to add them on Tox.
+                <a href="/add_ui">Add yourself</a>
+            </p>
+        </div>
+        <div class="chunk users">
+            {% for record in results_set %}
+            <div class="user_entry">
+                {% if record.bio %}
+                <p class="quote">{{ record.bio }}</p>
+                {% else %}
+                <p class="quote notext">(There is only silence.)</p>
+                {% end %}
+                <p class="quote_tail"></p>
+                
+                <span class="username">
+                    <a href="/u/{{ record.name }}"><b>{{ record.name }}</b></a><span class="de-emphasize">@{{ realm }}</span>
+                </span>
+            </div>
+            {% end %}
+        </div>
+        <div class="chunk pager">
+            {% if previous_page is not None %}
+            <a href="{{ previous_page }}">&laquo; Previous</a>
+            {% end %}
+            {% if previous_page is not None and next_page is not None %}
+            <span class="zodiac">||</span>
+            {% end %}
+            {% if next_page is not None %}
+            <a href="{{ next_page }}">Next &raquo;</a>
+            {% end %}
+        </div>
+        <div id="footer" class="footer">
+            <p>
+                <small class="de-emphasize">Copyright &copy; 2014 Zodiac Labs. All rights reserved.</small>
+                <small class="de-emphasize"><a href="https://github.com/zodiaclabs/tddmd">Get source code of this webpage.</a></small>
+            </p>
+        </div>
+    </article>
+</body>
+</html>

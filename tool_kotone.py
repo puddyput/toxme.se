@@ -61,7 +61,7 @@ def read_tox(fil):
         elif magic == b"\x00\x00\x00\x00":
             return _read_tox_mono(file_)
 
-def push(addr, name, fil):
+def push(addr, name, bio, fil):
     pkr = requests.get(addr + "/pk", verify=False)
     sk = pkr.json()["key"]
 
@@ -71,10 +71,11 @@ def push(addr, name, fil):
     pin = base64.b64encode(binascii.unhexlify(nospam))[:6]
     print("kotone: By the way, your PIN is {0}.".format(pin.decode("utf-8")))
     inner = json.dumps({
-        "s": mypub + check,
-        "n": name,
-        "l": 1,
-        "t": int(time.time())
+        "s": mypub + check, # Public key + checksum
+        "n": name, # Desired name
+        "l": 1, # Privacy level (1 or higher appears in FindFriends)
+        "b": bio.strip(), # Bio (quote displayed on web)
+        "t": int(time.time()) # A timestamp near the server's time
     })
     
     k = crypto.PrivateKey(mysec, crypto_encode.HexEncoder)
@@ -83,10 +84,10 @@ def push(addr, name, fil):
     msg = b.encrypt(inner.encode("utf8"), nonce, crypto_encode.Base64Encoder)
     
     payload = json.dumps({
-        "a": 1,
-        "k": mypub,
-        "e": msg.ciphertext.decode("utf8"),
-        "r": crypto_encode.Base64Encoder.encode(nonce).decode("utf8")
+        "a": 1, # Action number
+        "k": mypub, # Public key
+        "e": msg.ciphertext.decode("utf8"), # Encrypted payload base64 (above)
+        "r": crypto_encode.Base64Encoder.encode(nonce).decode("utf8") # b64
     })
     resp = requests.post(addr + "/api", data=payload, verify=False)
     a = resp.json()
@@ -103,8 +104,8 @@ def del_(addr, fil):
     check = _compute_checksum(mypub + nospam)
     print("kotone: Deleting {0} from server.".format(mypub, check))
     inner = json.dumps({
-        "p": mypub,
-        "t": int(time.time())
+        "p": mypub, # Public key
+        "t": int(time.time()) # Timestamp
     })
     
     k = crypto.PrivateKey(mysec, crypto_encode.HexEncoder)
@@ -126,40 +127,41 @@ def del_(addr, fil):
     else:
         print("\033[32mFailed:\033[0m {0}".format(a["c"]))
 
-#def r(addr):
-#    pkr = requests.get(addr + "/pk", verify=False)
-#    sk = pkr.json()["key"]
-#
-#    k = crypto.PrivateKey.generate()
-#    mypub = k.public_key.encode(crypto_encode.HexEncoder).upper().decode("ascii")
-#    nospam = "00000000"
-#    
-#    check = _compute_checksum(mypub + nospam)
-#    print("kotone: Deleting {0} from server.".format(mypub, check))
-#    inner = json.dumps({
-#        "s": mypub + check,
-#        "t": int(time.time()),
-#        "n": mypub,
-#        "l": 1,
-#    })
-#
-#    nonce = os.urandom(crypto.Box.NONCE_SIZE)
-#    b = crypto.Box(k, crypto.PublicKey(sk, crypto_encode.HexEncoder))
-#    msg = b.encrypt(inner.encode("utf8"), nonce, crypto_encode.Base64Encoder)
-#
-#    payload = json.dumps({
-#        "a": 1,
-#        "k": mypub,
-#        "e": msg.ciphertext.decode("utf8"),
-#        "r": crypto_encode.Base64Encoder.encode(nonce).decode("utf8")
-#    })
-#    resp = requests.post(addr + "/api", data=payload, verify=False)
-#    print(resp.text)
-#    a = resp.json()
-#    if a["c"] == 0:
-#        print("\033[32mOK:\033[0m ")
-#    else:
-#        print("\033[32mFailed:\033[0m {0}".format(a["c"]))
+def r(addr):
+    pkr = requests.get(addr + "/pk", verify=False)
+    sk = pkr.json()["key"]
+
+    k = crypto.PrivateKey.generate()
+    mypub = k.public_key.encode(crypto_encode.HexEncoder).upper().decode("ascii")
+    nospam = "00000000"
+
+    check = _compute_checksum(mypub + nospam)
+    print("kotone: Deleting {0} from server.".format(mypub, check))
+    inner = json.dumps({
+        "s": mypub + check,
+        "t": int(time.time()),
+        "n": "test-" + str(random.randint(0, 999999999)),
+        "b": "top test :^)",
+        "l": 1,
+    })
+
+    nonce = os.urandom(crypto.Box.NONCE_SIZE)
+    b = crypto.Box(k, crypto.PublicKey(sk, crypto_encode.HexEncoder))
+    msg = b.encrypt(inner.encode("utf8"), nonce, crypto_encode.Base64Encoder)
+
+    payload = json.dumps({
+        "a": 1,
+        "k": mypub,
+        "e": msg.ciphertext.decode("utf8"),
+        "r": crypto_encode.Base64Encoder.encode(nonce).decode("utf8")
+    })
+    resp = requests.post(addr + "/api", data=payload, verify=False)
+    print(resp.text)
+    a = resp.json()
+    if a["c"] == 0:
+        print("\033[32mOK:\033[0m ")
+    else:
+        print("\033[32mFailed:\033[0m {0}".format(a["c"]))
 
 def main():
     invocation, addr, action = sys.argv[:3]
@@ -169,8 +171,8 @@ def main():
         push(addr, *rest)
     elif action == "delete":
         del_(addr, *rest)
-    #elif action == "kek":
-    #    r(addr)
+    elif action == "kek":
+        r(addr)
 
 if __name__ == '__main__':
     main()

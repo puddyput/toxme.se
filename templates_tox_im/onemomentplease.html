@@ -1,0 +1,51 @@
+{% import base64 %}
+{% import binascii %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="0; tox://{{ record.name }}@{{ realm }}">
+    <title>Tox ID Service</title>
+    <link href="/static/tox.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <header class="header_nav">
+        <a class="icon" href="/" title="Tox"></a>
+    </header>
+    <article class="main_content">
+        <div class="chunk hello">
+            <p>
+                I'm opening your Tox client to add <b>{{ record.name }}@{{ realm }}</b>.<br>
+                <a href="tox://{{ record.name }}@{{ realm }}">Click here if it hasn't opened after a few seconds.</a>
+            </p>
+            {% if record.bio %}
+            <div class="user_entry">
+                <p class="quote">{{ record.bio }}</p>
+                <p class="quote_tail"></p>
+                <span class="username">
+                    <b>{{ record.name }}</b><span class="de-emphasize">@{{ realm }}</span>
+                </span>
+                {% if record.pin %}
+                <p class="public_id"><b>Full Tox ID</b>: {{ record.public_key }}{{ record.pin }}{{ record.checksum }}</p>
+                <p class="public_id"><b>PIN</b>: <code>{% raw base64.b64encode(binascii.unhexlify(record.pin)).decode("utf8").strip("=") %}</code></p>
+                {% end %}
+            </div>
+            {% end %}
+        </div>
+        <div class="chunk barcode">
+            <img src="/barcode/{{ record.name }}.svg">
+            <p>
+                <small class="de-emphasize">(If you have a phone, you can scan this QR code to add {{ record.name }} instead.)</small>
+            </p>
+        </div>
+        <p><a href="http://download.tox.im/">Don't have Tox? Click here to install it.</a></p>
+        <div id="footer" class="footer">
+            <p>
+                <small class="de-emphasize">Copyright &copy; 2014 Zodiac Labs. All rights reserved.</small>
+                <small class="de-emphasize"><a href="https://github.com/zodiaclabs/tddmd">Get source code of this webpage.</a></small>
+            </p>
+        </div>
+    </article>
+</body>
+</html>

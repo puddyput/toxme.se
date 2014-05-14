@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tox ID Service</title>
+    <link href="/static/tox.css" rel="stylesheet" type="text/css">
+    <link href="/static/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="/static/lookup.js"></script>
+</head>
+<body>
+    <header class="header_nav">
+        <a class="icon" href="/" title="Tox"></a>
+    </header>
+    <article class="main_content">
+        <div class="chunk hello dark">
+            <p class="tagline">Add Yourself</p>
+            <p>
+                Use this to add your Tox ID to the public list.<br>
+                Note: If your client supports this, it's best to do it from within the client.
+            </p>
+            <form class="addself_form" action="/add_ui" enctype="multipart/form-data" method="post">
+                <div class="formbit">
+                    <label class="left" for="name">Name</label>
+                    <input name="name" id="name" type="text" placeholder="Natsuki">
+                </div>
+                <div class="formbit">
+                    <label class="left" for="tox_id">Tox ID</label>
+                    <input name="tox_id" id="tox_id" type="text" placeholder="ABCDEF00...">
+                </div>
+                <div class="formbit">
+                    <label class="left" for="bio">Bio</label>
+                    <input name="bio" id="bio" type="text" placeholder="I am a...">
+                </div>
+                <div class="formbit">
+                    <input name="is_public" id="is_public" type="checkbox" value="1">
+                    <label for="is_public">Make my PIN public</label>
+                </div>
+                <div class="formbit">
+                    <input type="submit" class="submit" value="Publish!">
+                </div>
+                {% module xsrf_form_html() %}
+            </form>
+        </div>
+        <div class="chunk results">
+            <div id="lookup_error" class="chunk report" style="display:none"></div>
+            <div id="lookup_results" class="chunk report" style="display:none">
+                <p><b id="lu_oname"></b>@<span id="lu_regdomain"></span> - <small id="lu_stype" class="de-emphasize"></small></p>
+                <table id="results">
+                    <tr><td>Record type</td><td id="lu_rectype"></td></tr>
+                    <tr class="v1only"><td>Tox ID</td><td id="lu_user_id"></td></tr>
+                    <tr class="v2only"><td>Public key</td><td id="lu_user_pk"></td></tr>
+                    <tr><td>Signature</td><td id="lu_user_sig"></td></tr>
+                </table>
+            </div>
+        </div>
+        <div id="footer" class="footer">
+            <p>
+                <small class="de-emphasize">Copyright &copy; 2014 Zodiac Labs. All rights reserved.</small>
+                <small class="de-emphasize"><a href="https://github.com/zodiaclabs/tddmd">Get the source code of this webpage.</a></small>
+            </p>
+        </div>
+    </article>
+    <script type="text/javascript">sc_init();</script>
+</body>
+</html>
