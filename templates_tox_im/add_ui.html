@@ -39,20 +39,7 @@
                 <div class="formbit">
                     <input type="submit" class="submit" value="Publish!">
                 </div>
-                {% module xsrf_form_html() %}
             </form>
-        </div>
-        <div class="chunk results">
-            <div id="lookup_error" class="chunk report" style="display:none"></div>
-            <div id="lookup_results" class="chunk report" style="display:none">
-                <p><b id="lu_oname"></b>@<span id="lu_regdomain"></span> - <small id="lu_stype" class="de-emphasize"></small></p>
-                <table id="results">
-                    <tr><td>Record type</td><td id="lu_rectype"></td></tr>
-                    <tr class="v1only"><td>Tox ID</td><td id="lu_user_id"></td></tr>
-                    <tr class="v2only"><td>Public key</td><td id="lu_user_pk"></td></tr>
-                    <tr><td>Signature</td><td id="lu_user_sig"></td></tr>
-                </table>
-            </div>
         </div>
         <div id="footer" class="footer">
             <p>
