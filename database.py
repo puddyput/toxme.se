@@ -184,11 +184,13 @@ class Database(object):
         self.cached_page_count = math.ceil(float(count) / length)
         return self.cached_page_count
 
-    def iterate_all_users(self):
+    def iterate_all_users(self, mutates=0):
         sess = self.gs()
         results = sess.query(User)
         for obj in results:
             yield obj
+        if mutates:
+            sess.commit()
         sess.close()
 
     def delete_pk(self, pk):

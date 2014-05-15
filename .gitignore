@@ -12,3 +12,4 @@ zodiac.key
 __pycache__
 key
 djbroot
+hooks.py
