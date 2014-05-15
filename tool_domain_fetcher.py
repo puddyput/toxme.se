@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+* This file is released into the public domain.
+"""
 import requests
 import sys
 import os

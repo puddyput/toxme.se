@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""
+* tool_resigner.py
+* Author: stal, stqism; April 2014
+* Copyright (c) 2014 Zodiac Labs.
+* Further licensing information: see LICENSE.
+"""
 import yuu
 import database
 import hooks

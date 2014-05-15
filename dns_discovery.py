@@ -21,10 +21,7 @@ import error_codes
 *     core.callback_dispatcher = <function that calls callbacks>
 *     core.dispatch_lookup(<address>, <callback>)
 *
-* Copyright (c) 2014 Zodiac Labs.
-* You are free to do whatever you want with
-* this file -- provided this notice is
-* retained.
+* This file is released into the public domain.
 """
 
 """

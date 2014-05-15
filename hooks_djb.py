@@ -1,3 +1,9 @@
+"""
+* hooks_djb.py
+* Author: stal, stqism; April 2014
+* Copyright (c) 2014 Zodiac Labs.
+* Further licensing information: see LICENSE.
+"""
 import os
 import subprocess
 import time

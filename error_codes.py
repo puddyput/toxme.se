@@ -1,3 +1,10 @@
+"""
+* error_codes.py
+* Author: stal, stqism; April 2014
+* Copyright (c) 2014 Zodiac Labs.
+* Further licensing information: see LICENSE.
+"""
+
 ERROR_OK = {"c": 0}
 
 # Client didn't POST to /api

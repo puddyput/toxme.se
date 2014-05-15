@@ -1,3 +1,6 @@
+"""
+* This file is released into the public domain.
+"""
 import logging
 
 def init(config, database):

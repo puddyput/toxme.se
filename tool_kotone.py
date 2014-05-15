@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 # coding: utf8
 """
-* Tox DNS Discovery Management Daemon - draft API server for Tox ID publishing.
-* Since "Tox DNS Discovery Management Daemon" is a mouthful, just call it "yuu"
-*
+* tool_kotone.py
 * Author: stal, stqism; April 2014
 * Copyright (c) 2014 Zodiac Labs.
-* You are free to do whatever you want with this file -- provided that this
-* notice is retained.
+* Further licensing information: see LICENSE.
 """
 import requests
 import sys
