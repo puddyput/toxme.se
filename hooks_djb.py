@@ -16,7 +16,6 @@ NEEDS_UPDATE = 0
 def thread_run(root, database, ttl, home):
     global NEEDS_UPDATE
     while 1:
-        return
         if NEEDS_UPDATE:
             djbdns_write_file(root, database, ttl, home)
             NEEDS_UPDATE = 0
