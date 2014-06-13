@@ -310,6 +310,11 @@ class APILookupID(tornado.web.RequestHandler):
             self.settings["lookup_core"].dispatch_lookup(name, self._results)
 
 class APIFailure(tornado.web.RequestHandler):
+    def get(self):
+        self.set_status(400)
+        self.write(error_codes.ERROR_METHOD_UNSUPPORTED)
+        return
+
     def post(self):
         self.set_status(400)
         self.write(error_codes.ERROR_BAD_PAYLOAD)
@@ -318,6 +323,9 @@ class APIFailure(tornado.web.RequestHandler):
 def _make_handler_for_api_method(application, request, **kwargs):
     if request.protocol != "https":
         return HTTPSPolicyEnforcer(application, request, **kwargs)
+
+    if request.method != "POST":
+        return APIFailure(application, request, **kwargs)
 
     try:
         envelope = request.body.decode("utf8")
