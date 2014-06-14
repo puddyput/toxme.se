@@ -4,7 +4,7 @@ It accepts data in the following format:
 ``` {action,
     key,
     ecrypted data,
-    base64,
+    base64
     } ```
     
 It accepts the following kinds of requests: ```lookup``` and ```announce/update```
