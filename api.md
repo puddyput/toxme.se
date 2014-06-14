@@ -7,5 +7,8 @@ It accepts data in the following format:
     base64;
     } ```
     
+It accepts the following kinds of requests: ```lookup``` and ```announce/update```
+
+Lookup provides record details without asking dns, announce/update is used to join/update your Tox ID after joining.
     
 Note: This is clearly not complete
