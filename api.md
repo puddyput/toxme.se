@@ -1,10 +1,10 @@
 toxme.se supports a json API via post on https://toxme.se/api
 
 It accepts data in the following format: 
-``` {action;
-    key;
-    ecrypted data;
-    base64;
+``` {action,
+    key,
+    ecrypted data,
+    base64,
     } ```
     
 It accepts the following kinds of requests: ```lookup``` and ```announce/update```
