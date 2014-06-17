@@ -424,7 +424,7 @@ class FindFriends(tornado.web.RequestHandler):
             return
         self.render("public_userlist.html", results_set=results,
                     realm=self.settings["home"],
-                    next_page=(None if len(results) <= ENTRIES_PER_PAGE
+                    next_page=(None if len(results) < ENTRIES_PER_PAGE || len(results) == ENTRIES_PER_PAGE
                                     else num + 1),
                     previous_page=(num - 1) if num > 0 else None)
     
