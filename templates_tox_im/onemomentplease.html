@@ -15,7 +15,7 @@
     <article class="main_content">
         <div class="chunk hello">
             <p>
-                <a href="tox://{{ record.name }}@{{ realm }}">Click here to add {{record.name}}.</a>
+                <a href="tox://{{ record.public_key }}{{ record.pin }}{{ record.checksum }}">Click here to add {{record.name}}.</a>
                 <br><br>You can also add <b>{{ record.name }}@{{ realm }}</b> in your client.
             </p>
             {% if record.bio %}
