@@ -15,8 +15,8 @@
     <article class="main_content">
         <div class="chunk hello">
             <p>
-                I'm opening your Tox client to add <b>{{ record.name }}@{{ realm }}</b>.<br>
-                <a href="tox://{{ record.name }}@{{ realm }}">Click here if it hasn't opened after a few seconds.</a>
+                <a href="tox://{{ record.name }}@{{ realm }}">Click here to add {{record.name}}.</a>
+                <br><br>You can also add <b>{{ record.name }}@{{ realm }}</b> in your client.
             </p>
             {% if record.bio %}
             <div class="user_entry">
