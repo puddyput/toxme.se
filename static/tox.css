@@ -54,7 +54,7 @@ body {
     background-color:#ecf0f1;
 }
 .header_nav > .icon {
-    background-image:url(logo-head.png);
+    background-image:url(Logo_Vector.svg);
     background-size:109px 45px;
     height:45px;
     width:109px;
@@ -258,5 +258,15 @@ td#lu_user_sig.bad::before {
     }
     .lookup_form > button {
         width:55px;
+    }
+    .addself_form input,
+    .addself_form label.left {
+        padding:10px 15px;
+    }
+    .addself_form label.left {
+        width:90px;
+    }
+    .addself_form input {
+        width:190px;
     }
 }
