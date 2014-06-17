@@ -190,7 +190,6 @@ class APIHandler(tornado.web.RequestHandler):
             session.close()
         return 1
 
-
 class APIUpdateName(APIHandler):
     def initialize(self, envelope):
         self.envelope = envelope
@@ -497,8 +496,6 @@ class AddKeyWeb(APIHandler):
 
         if self.update_db_entry(None, name, pkey, bio, check, 1, pin):
             self.redirect("/friends/0")
-        else:
-            self.write(error_codes.ERROR_NAME_TAKEN)
         return
 
 def main():
