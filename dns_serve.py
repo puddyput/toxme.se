@@ -170,6 +170,6 @@ class ToxResolver(dnslib.server.BaseResolver):
 # TODO tornado ioloop integration
 def server(cryptocore, store, cfg):
     return dnslib.server.DNSServer(ToxResolver(cryptocore, store, cfg),
-                                   port=8053, address="127.0.0.1",
+                                   port=53, address="",
                                    logger=None,
                                    tcp=False)
