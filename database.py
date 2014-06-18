@@ -21,6 +21,7 @@ NON_SPECIAL = set(printable) - {":", ";", "(", ")"}
 BASE = declarative_base()
 DJB_SPECIAL = re.compile(r"([;=:])")
 PRESENCE_CACHE_CEILING = 1000
+OCT_ENCODE = lambda c: "\\" + "{0:o}".format(ord(c.group(0))).zfill(3)
 
 class User(BASE):
     __tablename__ = "records"
@@ -38,7 +39,7 @@ class User(BASE):
         """Whether searching will find this user."""
         return self.privacy > 0
 
-    def record(self):
+    def record(self, escaped=1):
         """Return a record for this user, escaping weird bytes in
            octal format.
            If our PIN is available, we return a tox1 record."""
@@ -50,8 +51,10 @@ class User(BASE):
             rec = "v=tox2;pub={0};check={1};sign={2}".format(self.public_key,
                                                              self.checksum,
                                                              self.sig)
-        return DJB_SPECIAL.sub(lambda c: "\\" + "{0:o}".format(ord(c.group(0)))
-                                                       .zfill(3), rec)
+        if escaped:
+            return DJB_SPECIAL.sub(OCT_ENCODE, rec)
+        else:
+            return rec
 
     def fqdn(self, suffix):
         """Return the FQDN for this User.
@@ -81,8 +84,8 @@ class StaleUser(object):
     def is_searchable(self):
         return User.is_searchable(self)
 
-    def record(self):
-        return User.record(self)
+    def record(self, escaped=1):
+        return User.record(self, escaped)
 
     def fqdn(self, suffix):
         return User.fqdn(self, suffix)

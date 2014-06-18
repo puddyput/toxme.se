@@ -20,12 +20,16 @@ import datetime
 import time
 import logging
 import re
+import pwd
+import grp
+import sys
 import urllib.parse as parse
 from collections import Counter, defaultdict
 
 import error_codes
 import barcode
 import dns_discovery
+import dns_serve
 import hooks
 
 tornado.log.enable_pretty_logging()
@@ -99,6 +103,16 @@ class CryptoCore(object):
     def verify_key(self):
         return self.skey.verify_key.encode(KEY_ENC).decode("utf8").upper()
 
+    def dsrep_decode_name(self, client, nonce, pl):
+        box = public.Box(self.pkey, public.PublicKey(client))
+        by = box.decrypt(pl, nonce)
+        return by
+
+    def dsrec_encrypt_key(self, client, nonce, msg):
+        box = public.Box(self.pkey, public.PublicKey(client))
+        by = box.encrypt(msg, nonce)
+        return by[24:]
+        
 #pragma mark - web
 
 class HTTPSPolicyEnforcer(tornado.web.RequestHandler):
@@ -185,8 +199,9 @@ class APIHandler(tornado.web.RequestHandler):
                 self.set_status(400)
                 self.write(error_codes.ERROR_DUPE_ID)
                 return 0
-            hooks.did_update_record(self.settings["hooks_state"],
-                                    database.StaleUser(mus))
+            if hooks:
+                hooks.did_update_record(self.settings["hooks_state"],
+                                        database.StaleUser(mus))
             session.close()
         return 1
 
@@ -260,7 +275,8 @@ class APIReleaseName(APIHandler):
         old = database.StaleUser(rec)
         self.settings["local_store"].delete_pk(pk)
         self.write(error_codes.ERROR_OK)
-        hooks.did_delete_record(self.settings["hooks_state"], old)
+        if hooks:
+            hooks.did_delete_record(self.settings["hooks_state"], old)
         return
 
 class APILookupID(tornado.web.RequestHandler):
@@ -507,7 +523,10 @@ def main():
     local_store = database.Database(cfg["database_url"])
     lookup_core = dns_discovery.DNSCore(cfg["number_of_workers"])
     lookup_core.callback_dispatcher = lambda cb, r: ioloop.add_callback(cb, r)
-    hooks_state = hooks.init(cfg, local_store)
+    if hooks:
+        hooks_state = hooks.init(cfg, local_store)
+    else:
+        hooks_state = None
 
     # an interesting object structure
     address_ctr = {ACTION_PUBLISH: {"counter": Counter(),
@@ -542,6 +561,32 @@ def main():
         "xheaders": cfg.get("is_proxied")
     })
     server.listen(cfg["server_port"], cfg["server_addr"])
+
+    if cfg.get("enable_dns_server", 0):
+        server = dns_serve.server(crypto_core, local_store, cfg)
+        server.start_thread()
+        LOGGER.info("DNS server activated.")
+
+    if "suid" in cfg:
+        LOGGER.info("Descending...")
+        if os.getuid() == 0:
+            if ":" not in cfg["suid"]:
+                user = cfg["suid"]
+                group = None
+            else:
+                user, group = cfg["suid"].split(":", 1)
+            uid = pwd.getpwnam(user).pw_uid
+            if group:
+                gid = grp.getgrnam(group).gr_gid
+            else:
+                gid = pwd.getpwnam(user).pw_gid
+            os.setgid(gid)
+            os.setuid(uid)
+            LOGGER.info("Continuing.")
+        else:
+            LOGGER.info("suid key exists in config, but not running as root. "
+                        "Exiting.")
+            sys.exit()
 
     if "pid_file" in cfg:
         with open(cfg["pid_file"], "w") as pid:
