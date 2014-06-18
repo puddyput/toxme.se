@@ -98,6 +98,10 @@ class ToxResolver(dnslib.server.BaseResolver):
         reply = request.reply()
         suffix = "._tox.{0}".format(self.ireg)
 
+        if question.qtype != 16 and not req_name.endswith(self.ireg):
+            reply.header.rcode = dnslib.RCODE.NXDOMAIN
+            return reply
+
         if question.qtype == 16:
             if not req_name.endswith(suffix):
                 reply.header.rcode = dnslib.RCODE.NXDOMAIN
