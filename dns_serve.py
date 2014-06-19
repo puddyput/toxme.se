@@ -136,7 +136,7 @@ class ToxResolver(dnslib.server.BaseResolver):
                 ct = self.cryptocore.dsrec_encrypt_key(ck, nonce_reply, msg)
                 
                 key_part = notsecure32_encode(ct)
-                reply.add_answer(dnslib.RR(req_name, 16, ttl=self.ttl,
+                reply.add_answer(dnslib.RR(req_name, 16, ttl=0,
                                  rdata=dnslib.TXT(b"".join((base, key_part)))))
                 return reply
             else:
@@ -145,7 +145,7 @@ class ToxResolver(dnslib.server.BaseResolver):
                     reply.header.rcode = dnslib.RCODE.NXDOMAIN
                     return reply
                 else:
-                    reply.add_answer(dnslib.RR(req_name, 16, ttl=self.ttl,
+                    reply.add_answer(dnslib.RR(req_name, 16, ttl=0,
                                                rdata=dnslib.TXT(rec.record(0)
                                                             .encode("utf8"))))
                     return reply
