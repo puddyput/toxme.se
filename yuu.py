@@ -500,12 +500,8 @@ class AddKeyWeb(APIHandler):
         privacybox = self.get_body_argument("privacy",default="off")
         if privacybox == "on":
             privacy = 0
-        else if privacybox == "off":
-            privacy = 1
         else:
-            self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
-            return
+            privacy = 1
 
 
 
