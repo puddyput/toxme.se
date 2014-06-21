@@ -496,7 +496,15 @@ class AddKeyWeb(APIHandler):
             self.set_status(400)
             self.write(error_codes.ERROR_BAD_PAYLOAD)
             return
-        
+
+        try:
+            if self.get_body_argument("privacy") == "on":
+                privacy = 0
+            else:
+                privacy = 1
+        except:
+            privacy = 1
+
         if len(toxid) == 68:
             pkey = toxid[:64]
             pin = None
@@ -510,7 +518,7 @@ class AddKeyWeb(APIHandler):
                 self.write(error_codes.ERROR_BAD_PAYLOAD)
                 return
 
-        if self.update_db_entry(None, name, pkey, bio, check, 1, pin):
+        if self.update_db_entry(None, name, pkey, bio, check, privacy, pin):
             self.redirect("/friends/0")
         return
 
