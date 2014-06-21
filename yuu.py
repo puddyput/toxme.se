@@ -497,13 +497,17 @@ class AddKeyWeb(APIHandler):
             self.write(error_codes.ERROR_BAD_PAYLOAD)
             return
 
-        try:
-            if self.get_body_argument("privacy") == "on":
-                privacy = 0
-            else:
-                privacy = 1
-        except:
+        privacybox = self.get_body_argument("privacy",default="off")
+        if privacybox == "on":
+            privacy = 0
+        else if privacybox == "off":
             privacy = 1
+        else:
+            self.set_status(400)
+            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            return
+
+
 
         if len(toxid) == 68:
             pkey = toxid[:64]
