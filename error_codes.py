@@ -22,6 +22,8 @@ ERROR_NAME_TAKEN = {"c": -25}
 # The public key given is bound to a name already.
 ERROR_DUPE_ID = {"c": -26}
 
+ERROR_BAD_PASSWORD = {"c": -28}
+
 # Lookup failed because of an error on the other domain's side.
 ERROR_LOOKUP_FAILED = {"c": -41}
 
@@ -33,3 +35,16 @@ ERROR_LOOKUP_INTERNAL = {"c": -43}
 
 # Client is publishing IDs too fast
 ERROR_RATE_LIMIT = {"c": -4}
+
+DESCRIPTIONS = {
+    -1: "You must send POST requests to /api.",
+    -2: "Please try again using a HTTPS connection.",
+    -3: "I was unable to read your encrypted payload.",
+    -4: "You're making too many requests. Wait an hour and try again.",
+    -25: "This name is already in use.",
+    -26: "This Tox ID is already registered under another name.",
+    -28: "Password incorrect.",
+    -41: "Lookup failed because the other server replied with invalid data.",
+    -42: "That user does not exist.",
+    -43: "Internal lookup error. Please file a bug.",
+}

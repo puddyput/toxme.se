@@ -65,14 +65,12 @@ def push(addr, name, bio, fil):
     mypub, mysec, nospam = read_tox(fil)
     check = _compute_checksum(mypub + nospam)
     print("kotone: Publishing {0}/{1} to server.".format(mypub, check))
-    pin = base64.b64encode(binascii.unhexlify(nospam))[:6]
-    print("kotone: By the way, your PIN is {0}.".format(pin.decode("utf-8")))
     inner = json.dumps({
-        "s": mypub + check, # Public key + checksum
-        "n": name, # Desired name
-        "l": 1, # Privacy level (1 or higher appears in FindFriends)
-        "b": bio.strip(), # Bio (quote displayed on web)
-        "t": int(time.time()) # A timestamp near the server's time
+        "tox_id": mypub + nospam + check, # Public key + checksum
+        "name": name, # Desired name
+        "privacy": 1, # Privacy level (1 or higher appears in FindFriends)
+        "bio": bio.strip(), # Bio (quote displayed on web)
+        "timestamp": int(time.time()) # A timestamp near the server's time
     })
     
     k = crypto.PrivateKey(mysec, crypto_encode.HexEncoder)
@@ -81,15 +79,16 @@ def push(addr, name, bio, fil):
     msg = b.encrypt(inner.encode("utf8"), nonce, crypto_encode.Base64Encoder)
     
     payload = json.dumps({
-        "a": 1, # Action number
-        "k": mypub, # Public key
-        "e": msg.ciphertext.decode("utf8"), # Encrypted payload base64 (above)
-        "r": crypto_encode.Base64Encoder.encode(nonce).decode("utf8") # b64
+        "action": 1, # Action number
+        "public_key": mypub, # Public key
+        "encrypted": msg.ciphertext.decode("utf8"), # Encrypted payload base64 (above)
+        "nonce": crypto_encode.Base64Encoder.encode(nonce).decode("utf8") # b64
     })
     resp = requests.post(addr + "/api", data=payload, verify=False)
     a = resp.json()
     if a["c"] == 0:
         print("\033[32mOK:\033[0m record successfully published.")
+        print("Password is '{0}'.".format(a["password"]))
     else:
         print("\033[32mFailed:\033[0m {0}".format(a["c"]))
 
@@ -101,8 +100,8 @@ def del_(addr, fil):
     check = _compute_checksum(mypub + nospam)
     print("kotone: Deleting {0} from server.".format(mypub, check))
     inner = json.dumps({
-        "p": mypub, # Public key
-        "t": int(time.time()) # Timestamp
+        "public_key": mypub, # Public key
+        "timestamp": int(time.time()) # Timestamp
     })
     
     k = crypto.PrivateKey(mysec, crypto_encode.HexEncoder)
@@ -111,10 +110,10 @@ def del_(addr, fil):
     msg = b.encrypt(inner.encode("utf8"), nonce, crypto_encode.Base64Encoder)
     
     payload = json.dumps({
-        "a": 2,
-        "k": mypub,
-        "e": msg.ciphertext.decode("utf8"),
-        "r": crypto_encode.Base64Encoder.encode(nonce).decode("utf8")
+        "action": 2,
+        "public_key": mypub,
+        "encrypted": msg.ciphertext.decode("utf8"),
+        "nonce": crypto_encode.Base64Encoder.encode(nonce).decode("utf8")
     })
     resp = requests.post(addr + "/api", data=payload, verify=False)
     a = resp.json()

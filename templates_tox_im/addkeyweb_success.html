@@ -12,18 +12,14 @@
     </header>
     <article class="main_content">
         <div class="chunk hello dark">
-            <p class="tagline">404.</p>
+            <p class="tagline">Done!</p>
             <p>
-                {% if record %}
-                I don't know anyone who goes by the name <b>{{ record }}@{{ realm }}</b>.
-                {% else %}
-                This page doesn't seem to exist.
-                {% end %}
+                Successfully added {{ n }}@{{ regdomain }} to the database. <br>
+                Your password is <code>{{ p }}</code>. Don't forget it.
             </p>
         </div>
         <div id="footer" class="footer">
             <p>
-                
                 <small class="de-emphasize">Copyright &copy; 2014 Tox Foundation. All rights reserved.</small>
                 <small class="de-emphasize"><a href="https://github.com/Tox/toxme.se">I'm open source!</a></small>
             </p>

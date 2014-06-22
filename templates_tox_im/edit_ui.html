@@ -14,13 +14,12 @@
     </header>
     <article class="main_content">
         <div class="chunk hello dark">
-            <p class="tagline">Add Yourself</p>
+            <p class="tagline">Edit Record</p>
             <p>
-                Use this to add your Tox ID to the public list.<br>
-                Note: If your client supports this, it's best to do it from within the client.<br>
-                Want to edit your entry? <a href="/edit_ui">Click here.</a>
+                Edit the entry for an existing Tox ID. Only the name and password are required.<br>
+                If you don't want to change a certain field, leave it blank.
             </p>
-            <form class="addself_form" action="/add_ui" enctype="multipart/form-data" method="post">
+            <form class="addself_form slightly_longer_labels" action="/edit_ui" enctype="multipart/form-data" method="post">
                 <div class="formbit">
                     <label class="left" for="name">Name</label>
                     <input name="name" id="name" type="text" placeholder="Natsuki">
@@ -34,11 +33,16 @@
                     <input name="bio" id="bio" type="text" placeholder="I am a...">
                 </div>
                 <div class="formbit">
+                    <label class="left" for="password">Password</label>
+                    <input name="password" id="password" type="password" placeholder="">
+                </div>
+                <div class="formbit">
                     <input name="privacy" id="privacy" type="checkbox">
                     <label for="privacy">Hide my name from the public list</label>
                 </div>
                 <div class="formbit">
-                    <input type="submit" class="submit" value="Publish!">
+                    <input type="submit" class="submit" name="edit_action" value="Delete">
+                    <input type="submit" class="submit" name="edit_action" value="Update">
                 </div>
             </form>
         </div>

@@ -1,5 +1,3 @@
-{% import base64 %}
-{% import binascii %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -27,7 +25,6 @@
                 </span>
                 {% if record.pin %}
                 <p class="public_id"><b>Full Tox ID</b>: {{ record.public_key }}{{ record.pin }}{{ record.checksum }}</p>
-                <p class="public_id"><b>PIN</b>: <code>{% raw base64.b64encode(binascii.unhexlify(record.pin)).decode("utf8").strip("=") %}</code></p>
                 {% end %}
             </div>
             {% end %}

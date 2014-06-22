@@ -1,3 +1,5 @@
+**Changed 2014/06/22: Longer named parameters and deprecated PIN**
+
 ### How to read:
 - JSON is inlined between { }.
 - <> denotes substitution.
@@ -21,10 +23,10 @@ server decides where to look up.
 "Authenticated" API payloads have the following format.
 ```
 {
-    "a": <action id>,
-    "k": <the public key of the private key used to encrypt "e">,
-    "e": <action-dependent payload, encrypted with crypto_box: see below (base64)>,
-    "r": <a 24-byte nonce (base64)>
+    "action": <action id>,
+    "public_key": <the public key of the private key used to encrypt "e">,
+    "encrypted": <action-dependent payload, encrypted with crypto_box: see below (base64)>,
+    "nonce": <a 24-byte nonce (base64)>
 }
 ```
 The following payloads are JSON strings encrypted with crypto_box, then encoded
@@ -33,19 +35,19 @@ to base64.
 push (1): 
 ```
 {
-    "s": <public key + checksum (hex), which should be 68 characters>
-    "n": <name>
-    "l": <looseness level; if it's > 1 it appears in /friends>
-    "b": <a bio string (cf https://toxme.se/friends/0, the bio appears in the speech bubbles)>
-    "t": <the current UTC time as unix timestamp>
+    "tox_id": <full Tox ID (hex, 72 chars)>
+    "name": <name>
+    "privacy": <looseness level; if it's > 1 it appears in /friends>
+    "bio": <a bio string (cf https://toxme.se/friends/0, the bio appears in the speech bubbles)>
+    "timestamp": <the current UTC time as unix timestamp>
 }
 ```
 
 delete (2): 
 ```
 {
-    "p": <public key (64 chars hex)>
-    "t": <the current UTC time as unix timestamp>
+    "public_key": <public key (64 chars hex)>
+    "timestamp": <the current UTC time as unix timestamp>
 }
 ```
 
@@ -81,6 +83,16 @@ ERROR_LOOKUP_INTERNAL = {"c": -43}
 ERROR_RATE_LIMIT = {"c": -4}
 ```
 
+For push(1), a password is issued for editing the record without having
+the private key.
+
+```
+{
+    "c": 0,
+    "password": <any string>
+}
+```
+
 For lookup, information is included about the ID: 
 ```
 {
@@ -95,4 +107,5 @@ For lookup, information is included about the ID:
         "status": 1,
         "detail": "Good (signed by local authority)"
     }
-}```
+}
+```

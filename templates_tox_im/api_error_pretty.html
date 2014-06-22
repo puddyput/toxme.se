@@ -12,13 +12,9 @@
     </header>
     <article class="main_content">
         <div class="chunk hello dark">
-            <p class="tagline">404.</p>
+            <p class="tagline">API Error</p>
             <p>
-                {% if record %}
-                I don't know anyone who goes by the name <b>{{ record }}@{{ realm }}</b>.
-                {% else %}
-                This page doesn't seem to exist.
-                {% end %}
+                {{ f }} ({{ payload["c"] }})
             </p>
         </div>
         <div id="footer" class="footer">
