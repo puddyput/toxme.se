@@ -109,12 +109,16 @@ class StaleUser(object):
 class Database(object):
     def __init__(self, backing="sqlite:///:memory:", should_echo=1):
         self.presence_cache = {}
-        self.dbc = sqlalchemy.create_engine(backing, echo=should_echo)
-        BASE.metadata.create_all(self.dbc)
-        self.gs = sqlalchemy.orm.sessionmaker(bind=self.dbc)
+        self.backing = backing
+        self.should_echo = should_echo
         self.lock = threading.RLock()
         self.cached_first_page = None
         self.cached_page_count = None
+
+    def late_init(self):
+        self.dbc = sqlalchemy.create_engine(self.backing, echo=self.should_echo)
+        BASE.metadata.create_all(self.dbc)
+        self.gs = sqlalchemy.orm.sessionmaker(bind=self.dbc)
 
     def _cache_entity_ins(self, name, prefetch):
         if len(self.presence_cache) > PRESENCE_CACHE_CEILING:
