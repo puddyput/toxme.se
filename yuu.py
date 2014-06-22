@@ -363,7 +363,7 @@ class APILookupID(tornado.web.RequestHandler):
         else:
             self.settings["lookup_core"].dispatch_lookup(name, self._results)
 
-class APIFailure(tornado.web.RequestHandler):
+class APIFailure(APIHandler):
     def get(self):
         self.set_status(400)
         self.json_payload(error_codes.ERROR_METHOD_UNSUPPORTED)
@@ -557,7 +557,6 @@ class EditKeyWeb(APIHandler):
         if self.update_db_entry(rec.public_key, name, pkey, bio, check, privacy, pin):
             self.redirect("/friends/0")
         return
-
 
 class AddKeyWeb(APIHandler):
     RETURNS_JSON = 0
