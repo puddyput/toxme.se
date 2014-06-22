@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tox ID Service</title>
-    <link href="../tox.css" rel="stylesheet" type="text/css">
+    <link href="/static/tox.css" rel="stylesheet" type="text/css">
 </head>
 <body>
     <header class="header_nav">
@@ -12,10 +12,9 @@
     </header>
     <article class="main_content">
         <div class="chunk hello dark">
-            <p class="tagline">400.</p>
+            <p class="tagline">API Error</p>
             <p>
-                {{ err }}</b>.
-                <br><br><a href="https://github.com/Tox/toxme.se/issues">Click here</a> to file a bug, or <a href="https://toxme.se">click here</a> to return to the home page.
+                {{ f }} ({{ payload["c"] }})
             </p>
         </div>
         <div id="footer" class="footer">

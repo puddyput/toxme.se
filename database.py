@@ -6,12 +6,13 @@
 """
 import sqlalchemy
 import sqlalchemy.exc
-from sqlalchemy import Integer, DateTime, Unicode, Column, String
+from sqlalchemy import Integer, DateTime, Unicode, Column, String, Binary
 from sqlalchemy.ext.declarative import declarative_base
 from string import printable
 import re
 import threading
 import math
+import hashlib
 
 """
 Module summary: manages the database of users.
@@ -34,23 +35,22 @@ class User(BASE):
     timestamp = Column(DateTime)
     sig = Column(String)
     pin = Column(String)
+    password = Column(Binary, nullable=False)
 
     def is_searchable(self):
         """Whether searching will find this user."""
         return self.privacy > 0
 
+    def tox_id(self):
+        return "".join((self.public_key, self.pin, self.checksum))
+
     def record(self, escaped=1):
         """Return a record for this user, escaping weird bytes in
            octal format.
            If our PIN is available, we return a tox1 record."""
-        if self.pin:
-            rec = "v=tox1;id={0}{1}{2};sign={3}".format(self.public_key,
-                                                        self.pin, self.checksum,
-                                                        self.sig)
-        else:
-            rec = "v=tox2;pub={0};check={1};sign={2}".format(self.public_key,
-                                                             self.checksum,
-                                                             self.sig)
+        rec = "v=tox1;id={0}{1}{2};sign={3}".format(self.public_key,
+                                                    self.pin, self.checksum,
+                                                    self.sig)
         if escaped:
             return DJB_SPECIAL.sub(OCT_ENCODE, rec)
         else:
@@ -69,6 +69,15 @@ class User(BASE):
         return "._tox.".join(("".join(o), "".join((suffix, "."))
                              if not suffix.endswith(".") else suffix))
 
+    def is_password_matching(self, checkpass):
+        salt, correct_digest = self.password[:16], self.password[16:]
+        hash_ = hashlib.sha512(salt)
+        hash_.update(checkpass.encode("utf8"))
+        if hash_.digest() == correct_digest:
+            return 1
+        else:
+            return 0
+
 class StaleUser(object):
     def __init__(self, u):
         self.user_id = u.user_id
@@ -80,15 +89,22 @@ class StaleUser(object):
         self.timestamp = u.timestamp
         self.sig = u.sig
         self.pin = u.pin
+        self.password = u.password
 
     def is_searchable(self):
         return User.is_searchable(self)
+
+    def tox_id(self):
+        return User.tox_id(self)
 
     def record(self, escaped=1):
         return User.record(self, escaped)
 
     def fqdn(self, suffix):
         return User.fqdn(self, suffix)
+
+    def is_password_matching(self, checkpass):
+        return User.is_password_matching(self, checkpass)
 
 class Database(object):
     def __init__(self, backing="sqlite:///:memory:", should_echo=1):
@@ -155,7 +171,6 @@ class Database(object):
         self.cached_first_page = None
         return 1
 
-
     def get_ig(self, name, sess=None):
         sess = sess or self.gs()
         ex = sess.query(User).filter_by(name=name).first()
@@ -168,7 +183,7 @@ class Database(object):
 
     def get_page_ig(self, num, length, sess=None):
         sess = sess or self.gs()
-        ex = (sess.query(User).order_by(User.user_id.desc())
+        ex = (sess.query(User).filter(User.privacy > 0).order_by(User.timestamp.desc())
                               .limit(length).offset(num * length))
         make_stale = lambda n: (self.presence_cache.get(n.name, 0)
                                 or self._cache_entity_ins(n.name, n))
