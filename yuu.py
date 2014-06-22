@@ -118,7 +118,7 @@ class CryptoCore(object):
 class HTTPSPolicyEnforcer(tornado.web.RequestHandler):
     def _fail(self):
         self.set_status(400)
-        self.write(error_codes.ERROR_NOTSECURE)
+        self.render("api_error.html", err=error_codes.ERROR_NOTSECURE)
         return ""
 
     post = get = _fail
@@ -135,14 +135,14 @@ class APIHandler(tornado.web.RequestHandler):
     def _encrypted_payload_prologue(self, envelope):
         if not self._typecheck_dict(envelope, {"k": str, "r": str, "e": str}):
             self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
             return
         try:
             other_key = public.PublicKey(envelope["k"], KEY_ENC)
         except nacl.exceptions.CryptoError:
             LOGGER.warn("did fail req because other pk was bad")
             self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
             return
 
         box = public.Box(self.settings["crypto_core"].pkey, other_key)
@@ -154,7 +154,7 @@ class APIHandler(tornado.web.RequestHandler):
         except (ValueError, TypeError, nacl.exceptions.CryptoError):
             LOGGER.warn("did fail req because a base64 value was bad")
             self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
             return
 
         try:
@@ -162,7 +162,7 @@ class APIHandler(tornado.web.RequestHandler):
         except (UnicodeDecodeError, TypeError):
             LOGGER.warn("did fail req because inner json decode failed")
             self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
             return
         return clear
 
@@ -173,7 +173,7 @@ class APIHandler(tornado.web.RequestHandler):
             if owner_of_cid and owner_of_cid.name != name:
                 session.close()
                 self.set_status(400)
-                self.write(error_codes.ERROR_DUPE_ID)
+                self.render("api_error.html", err=error_codes.ERROR_DUPE_ID)
                 return 0
         
             session, mus = dbc.get_ig(name, session)
@@ -182,7 +182,7 @@ class APIHandler(tornado.web.RequestHandler):
             elif mus.public_key != auth:
                 session.close()
                 self.set_status(400)
-                self.write(error_codes.ERROR_NAME_TAKEN)
+                self.render("api_error.html", err=error_codes.ERROR_NAME_TAKEN)
                 return 0
         
             mus.name = name
@@ -197,7 +197,7 @@ class APIHandler(tornado.web.RequestHandler):
             if not ok:
                 session.close()
                 self.set_status(400)
-                self.write(error_codes.ERROR_DUPE_ID)
+                self.render("api_error.html", err=error_codes.ERROR_DUPE_ID)
                 return 0
             if hooks:
                 hooks.did_update_record(self.settings["hooks_state"],
@@ -220,7 +220,7 @@ class APIUpdateName(APIHandler):
         
         if ctr["counter"][self.request.remote_ip] > THROTTLE_THRESHOLD:
             self.set_status(400)
-            self.write(error_codes.ERROR_RATE_LIMIT)
+            self.render("api_error.html", err=error_codes.ERROR_RATE_LIMIT)
             return
         
         clear = self._encrypted_payload_prologue(self.envelope)
@@ -230,7 +230,7 @@ class APIUpdateName(APIHandler):
         if not self._typecheck_dict(clear, {"s": str, "n": str,
                                             "t": int, "l": int, "b": str}):
             self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
             return
 
         auth = self.envelope["k"].upper()
@@ -245,14 +245,14 @@ class APIUpdateName(APIHandler):
             or len(name) > NAME_LIMIT_HARD
             or len(bio) > BIO_LIMIT):
             self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
             return
 
         pub, check = id_[:64], id_[64:]
 
         if self.update_db_entry(auth, name, pub, bio, check,
                                 max(clear["l"], 0)):
-            self.write(error_codes.ERROR_OK)
+            self.render("api_error.html", err=error_codes.ERROR_OK)
         return
 
 class APIReleaseName(APIHandler):
@@ -268,13 +268,13 @@ class APIReleaseName(APIHandler):
         pk = clear.get("p", "").upper()
         if not VALID_KEY.match(pk) or abs(ctime - clear.get("t", 0)) > 300:
             self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
             return
 
         rec = self.settings["local_store"].get_by_id_ig(pk)[1]
         old = database.StaleUser(rec)
         self.settings["local_store"].delete_pk(pk)
-        self.write(error_codes.ERROR_OK)
+        self.render("api_error.html", err=error_codes.ERROR_OK)
         if hooks:
             hooks.did_delete_record(self.settings["hooks_state"], old)
         return
@@ -285,7 +285,7 @@ class APILookupID(tornado.web.RequestHandler):
 
     def _results(self, result):
         self.set_status(200 if result["c"] == 0 else 400)
-        self.write(result)
+        self.render("api_error.html", err=result)
         self.finish()
 
     def _build_local_result(self, name):
@@ -312,7 +312,7 @@ class APILookupID(tornado.web.RequestHandler):
         name = self.envelope.get("name").lower()
         if not name or name.endswith("@") or name.startswith("@"):
             self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
             self.finish()
             return
         if "@" not in name:
@@ -327,12 +327,12 @@ class APILookupID(tornado.web.RequestHandler):
 class APIFailure(tornado.web.RequestHandler):
     def get(self):
         self.set_status(400)
-        self.write(error_codes.ERROR_METHOD_UNSUPPORTED)
+        self.render("api_error.html", err=error_codes.ERROR_METHOD_UNSUPPORTED)
         return
 
     def post(self):
         self.set_status(400)
-        self.write(error_codes.ERROR_BAD_PAYLOAD)
+        self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
         return
 
 def _make_handler_for_api_method(application, request, **kwargs):
@@ -362,7 +362,7 @@ def _make_handler_for_api_method(application, request, **kwargs):
 class PublicKey(tornado.web.RequestHandler):
     def get(self):
         if self.request.protocol != "https":
-            self.write(error_codes.ERROR_NOTSECURE)
+            self.render("api_error.html", err=error_codes.ERROR_NOTSECURE)
         else:
             self.write({
                 "c": 0,
@@ -376,7 +376,7 @@ class CreateQR(tornado.web.RequestHandler):
 
     def get(self, path_id):
         if self.request.protocol != "https":
-            self.write(error_codes.ERROR_NOTSECURE)
+            self.render("api_error.html", err=error_codes.ERROR_NOTSECURE)
             return
         name = (parse.unquote(path_id) if path_id else "").lower()
         if not name or not set(name).isdisjoint(DISALLOWED_CHARS):
@@ -420,7 +420,7 @@ class LookupAndOpenUser(tornado.web.RequestHandler):
 
     def get(self, path_id=None):
         if self.request.protocol != "https":
-            self.write(error_codes.ERROR_NOTSECURE)
+            self.render("api_error.html", err=error_codes.ERROR_NOTSECURE)
             return
         name = (parse.unquote(path_id) if path_id else "").lower()
         if name:
@@ -446,7 +446,7 @@ class FindFriends(tornado.web.RequestHandler):
     
     def get(self, page):
         if self.request.protocol != "https":
-            self.write(error_codes.ERROR_NOTSECURE)
+            self.render("api_error.html", err=error_codes.ERROR_NOTSECURE)
             return
         
         return self._render_page(page)
@@ -454,7 +454,7 @@ class FindFriends(tornado.web.RequestHandler):
 class AddKeyWeb(APIHandler):
     def get(self):
         if self.request.protocol != "https":
-            self.write(error_codes.ERROR_NOTSECURE)
+            self.render("api_error.html", err=error_codes.ERROR_NOTSECURE)
             return
         self.render("add_ui.html")
 
@@ -462,7 +462,7 @@ class AddKeyWeb(APIHandler):
     # explaining what went wrong.
     def post(self):
         if self.request.protocol != "https":
-            self.write(error_codes.ERROR_NOTSECURE)
+            self.render("api_error.html", err=error_codes.ERROR_NOTSECURE)
             return
 
         ctr = self.settings["address_ctr"][ACTION_PUBLISH]
@@ -481,20 +481,20 @@ class AddKeyWeb(APIHandler):
         if (not DISALLOWED_CHARS.isdisjoint(set(name))
             or name in DISALLOWED_NAMES):
             self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
             return
 
         bio = self.get_body_argument("bio")
         if len(bio) > BIO_LIMIT:
             self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
             return
 
         toxid = self.get_body_argument("tox_id").upper()
         if (not VALID_ANY.match(toxid)
             or len(toxid) not in {68, 76}):
             self.set_status(400)
-            self.write(error_codes.ERROR_BAD_PAYLOAD)
+            self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
             return
 
         privacybox = self.get_body_argument("privacy",default="off")
@@ -502,8 +502,6 @@ class AddKeyWeb(APIHandler):
             privacy = 0
         else:
             privacy = 1
-
-
 
         if len(toxid) == 68:
             pkey = toxid[:64]
@@ -515,7 +513,7 @@ class AddKeyWeb(APIHandler):
             check = toxid[72:]
             if CryptoCore.compute_checksum("".join((pkey, pin))) != check:
                 self.set_status(400)
-                self.write(error_codes.ERROR_BAD_PAYLOAD)
+                self.render("api_error.html", err=error_codes.ERROR_BAD_PAYLOAD)
                 return
 
         if self.update_db_entry(None, name, pkey, bio, check, privacy, pin):
