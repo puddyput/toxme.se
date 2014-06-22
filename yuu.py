@@ -324,7 +324,7 @@ class APILookupID(tornado.web.RequestHandler):
 
     def _results(self, result):
         self.set_status(200 if result["c"] == 0 else 400)
-        self.json_payload(result)
+        self.write(result)
         self.finish()
 
     def _build_local_result(self, name):
@@ -351,7 +351,7 @@ class APILookupID(tornado.web.RequestHandler):
         name = self.envelope.get("name").lower()
         if not name or name.endswith("@") or name.startswith("@"):
             self.set_status(400)
-            self.json_payload(error_codes.ERROR_BAD_PAYLOAD)
+            self.write(error_codes.ERROR_BAD_PAYLOAD)
             self.finish()
             return
         if "@" not in name:
