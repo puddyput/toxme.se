@@ -134,10 +134,10 @@ class APIHandler(tornado.web.RequestHandler):
         return 1
 
     def display_err(err):
-        if get_query_argument("format", default="pretty") != "pretty":
+        if get_query_argument("api", default="pretty") != "pretty":
             self.write(err)
         else:
-            self.render("api_error.html", err=err)
+            self.render("api_error.html", err=json.loads(err)[0]['f'])
 
     def _encrypted_payload_prologue(self, envelope):
         if not self._typecheck_dict(envelope, {"k": str, "r": str, "e": str}):

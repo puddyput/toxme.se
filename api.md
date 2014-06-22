@@ -4,7 +4,7 @@
 - [] denotes optionality.
 - Everything else is taken literally.
 
-Assume all requests are POSTed to /api.
+Assume all requests are POSTed to /api, append the ?api query string to get raw json, otherwise "pretty" errors are shown.
 
 ### Anonymous APIs:
 ```
