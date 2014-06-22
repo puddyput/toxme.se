@@ -134,7 +134,7 @@ class APIHandler(tornado.web.RequestHandler):
         return 1
 
     def display_err(err):
-        if get_query_argument("api", default="pretty") != "pretty":
+        if self.get_query_argument("api", default="pretty") != "pretty":
             self.write(err)
         else:
             self.render("api_error.html", err=json.loads(err)[0]['f'])
