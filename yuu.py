@@ -634,6 +634,27 @@ def main():
     with open("config.json", "r") as config_file:
         cfg = json.load(config_file)
 
+    if "suid" in cfg:
+        LOGGER.info("Descending...")
+        if os.getuid() == 0:
+            if ":" not in cfg["suid"]:
+                user = cfg["suid"]
+                group = None
+            else:
+                user, group = cfg["suid"].split(":", 1)
+            uid = pwd.getpwnam(user).pw_uid
+            if group:
+                gid = grp.getgrnam(group).gr_gid
+            else:
+                gid = pwd.getpwnam(user).pw_gid
+            os.setgid(gid)
+            os.setuid(uid)
+            LOGGER.info("Continuing.")
+        else:
+            LOGGER.info("suid key exists in config, but not running as root. "
+                        "Exiting.")
+            sys.exit()
+
     ioloop = tornado.ioloop.IOLoop.instance()
     crypto_core = CryptoCore()
     local_store = database.Database(cfg["database_url"])
@@ -683,27 +704,6 @@ def main():
         server = dns_serve.server(crypto_core, local_store, cfg)
         server.start_thread()
         LOGGER.info("DNS server activated.")
-
-    if "suid" in cfg:
-        LOGGER.info("Descending...")
-        if os.getuid() == 0:
-            if ":" not in cfg["suid"]:
-                user = cfg["suid"]
-                group = None
-            else:
-                user, group = cfg["suid"].split(":", 1)
-            uid = pwd.getpwnam(user).pw_uid
-            if group:
-                gid = grp.getgrnam(group).gr_gid
-            else:
-                gid = pwd.getpwnam(user).pw_gid
-            os.setgid(gid)
-            os.setuid(uid)
-            LOGGER.info("Continuing.")
-        else:
-            LOGGER.info("suid key exists in config, but not running as root. "
-                        "Exiting.")
-            sys.exit()
 
     if "pid_file" in cfg:
         with open(cfg["pid_file"], "w") as pid:
