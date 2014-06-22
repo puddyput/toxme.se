@@ -85,7 +85,7 @@ function sc_performSearch() {
     }
     xhr.open("POST", "/api", true);
     xhr.send(JSON.stringify({
-        "a": 3,
+        "action": 3,
         "name": query,
     }));
     sc_showFailureOnUI("Please wait...")
