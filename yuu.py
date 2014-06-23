@@ -216,7 +216,6 @@ class APIHandler(tornado.web.RequestHandler):
             mus.sig = self.settings["crypto_core"].sign(mus)
             mus.bio = bio
             mus.pin = pin
-            mus.lock = lock
             if password:
                 mus.password = password
             ok = dbc.update_atomic(mus, session)
