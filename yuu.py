@@ -545,6 +545,7 @@ class EditKeyWeb(APIHandler):
             self.json_payload(error_codes.ERROR_BAD_PAYLOAD)
             return
         privacy = 0 if self.get_body_argument("privacy", "off") == "on" else 1
+        lock = 1 if self.get_body_argument("lock", "off") == "on" else 0
     
         pkey = toxid[:64]
         pin = toxid[64:72]
@@ -616,8 +617,11 @@ class AddKeyWeb(APIHandler):
         old_rec = self.settings["local_store"].get(name)
         if not old_rec:
             salt = os.urandom(16)
-            password = new_password()
-            hash_ = salt + hashlib.sha512(salt + password.encode("utf8")).digest()
+            if lock == 0:
+                password = new_password()
+                hash_ = salt + hashlib.sha512(salt + password.encode("utf8")).digest()
+            else:
+                hash_ = None
         else:
             self.set_status(400)
             self.json_payload(error_codes.ERROR_NAME_TAKEN)
