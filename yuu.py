@@ -621,6 +621,7 @@ class AddKeyWeb(APIHandler):
                 password = new_password()
                 hash_ = salt + hashlib.sha512(salt + password.encode("utf8")).digest()
             else:
+                password = "None set"
                 hash_ = None
         else:
             self.set_status(400)
