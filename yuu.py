@@ -606,6 +606,7 @@ class AddKeyWeb(APIHandler):
             return
 
         privacy = 0 if self.get_body_argument("privacy", "off") == "on" else 1
+        lock = 1 if self.get_body_argument("lock", "off") == "on" else 0
 
         pkey = toxid[:64]
         pin = toxid[64:72]
