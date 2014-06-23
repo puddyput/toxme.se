@@ -189,7 +189,7 @@ class APIHandler(tornado.web.RequestHandler):
                         f=error_codes.DESCRIPTIONS[payload["c"]])
 
     def update_db_entry(self, auth, name, pub, bio, check, privacy, pin=None,
-                        password=None):
+                        password=None, lock=None):
         dbc = self.settings["local_store"]
         with dbc.lock:
             session, owner_of_cid = dbc.get_by_id_ig(pub)
@@ -555,7 +555,7 @@ class EditKeyWeb(APIHandler):
             self.json_payload(error_codes.ERROR_BAD_PAYLOAD)
             return
 
-        if self.update_db_entry(rec.public_key, name, pkey, bio, check, privacy, pin):
+        if self.update_db_entry(rec.public_key, name, pkey, bio, check, privacy, pin, lock):
             self.redirect("/friends/0")
         return
 
