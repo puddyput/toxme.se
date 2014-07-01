@@ -46,6 +46,7 @@ function sc_showResultOnUI(payload) {
     sigbox.textContent = payload.verify.detail;
     sigbox.className = payload.verify.status === 1 ? "good"
                        : (payload.verify.status === 2 ? "bad" : "undecided");
+    document.getElementById("lu_user_link").href = "/u/" + payload.name;
 }
 
 function sc_lookupStatusDidChange(sender) {
@@ -74,13 +75,11 @@ function sc_lookupStatusDidChange(sender) {
 
 function sc_performSearch(e) {
     "use strict";
-
     // Check if the user pressed enter.
     if (e.type === "keydown" && e.keyCode !== 13)
             return;
 
     var query, xhr;
-
     query = document.getElementById("search_text").value.trim();
     if (query === "")
         return;

@@ -223,7 +223,7 @@ td#lu_user_sig.bad::before {
     border-radius:9001px 0 0 9001px;
     background-color:#feb41c;
     color:black;
-    width:110px;
+    width:135px;
 }
 .addself_form input {
     border-radius:0 9001px 9001px 0;
@@ -233,10 +233,6 @@ td#lu_user_sig.bad::before {
     background-color:#feb41c;
     font-weight:bold;
     margin:0 5px;
-}
-
-.addself_form.slightly_longer_labels label.left {
-    width:135px;
 }
 
 .footer {
