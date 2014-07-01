@@ -72,9 +72,15 @@ function sc_lookupStatusDidChange(sender) {
     }
 }
 
-function sc_performSearch() {
+function sc_performSearch(e) {
     "use strict";
+
+    // Check if the user pressed enter.
+    if (e.type === "keydown" && e.keyCode !== 13)
+            return;
+
     var query, xhr;
+
     query = document.getElementById("search_text").value.trim();
     if (query === "")
         return;
@@ -97,5 +103,8 @@ function sc_init() {
     qbox.value = window.location.hash.substring(1);
     document.getElementById("search_go").addEventListener(
         "click", sc_performSearch, 1
+    );
+    document.getElementById("search_text").addEventListener(
+        "keydown", sc_performSearch, 1
     );
 }
