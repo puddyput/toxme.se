@@ -22,7 +22,6 @@ function sc_errorStringFromCode(ec) {
 
 function sc_showResultOnUI(payload) {
     "use strict";
-
     var message, source, sigbox;
     document.getElementById("lookup_error").style.display = "none";
     message = document.getElementById("lookup_results");
@@ -76,13 +75,11 @@ function sc_lookupStatusDidChange(sender) {
 
 function sc_performSearch(e) {
     "use strict";
-
     // Check if the user pressed enter.
     if (e.type === "keydown" && e.keyCode !== 13)
             return;
 
     var query, xhr;
-
     query = document.getElementById("search_text").value.trim();
     if (query === "")
         return;
