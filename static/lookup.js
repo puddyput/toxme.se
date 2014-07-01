@@ -22,6 +22,7 @@ function sc_errorStringFromCode(ec) {
 
 function sc_showResultOnUI(payload) {
     "use strict";
+
     var message, source, sigbox;
     document.getElementById("lookup_error").style.display = "none";
     message = document.getElementById("lookup_results");
@@ -46,6 +47,7 @@ function sc_showResultOnUI(payload) {
     sigbox.textContent = payload.verify.detail;
     sigbox.className = payload.verify.status === 1 ? "good"
                        : (payload.verify.status === 2 ? "bad" : "undecided");
+    document.getElementById("lu_user_link").href = "/u/" + payload.name;
 }
 
 function sc_lookupStatusDidChange(sender) {
